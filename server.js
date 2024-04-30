@@ -5,21 +5,21 @@ const PORT = process.env.PORT  || 3001;
 
 const products = [
     {
-        "id": "2dd520bd-cd04-48a9-b4c7-efde62683aef",
+        "id": 1,
         "name": "Microphone",
         "price": 400,
         "quantity": 4,
         "active": true
       },
       {
-        "id": "2dd520bd-cd04-48a9-b4c7-efde62683adk",
+        "id": 2,
         "name": "Keyboard",
         "price": 29,
         "quantity": 10,
         "active": true
       },
       {
-        "id": "2dd520bd-cd04-48a9-b4c7-efde62683ada",
+        "id": 3,
         "name": "headphones",
         "price": 40,
         "quantity": 4,
@@ -42,7 +42,7 @@ app.post('/products', (req, res) => {
     if(!name || !price || !quantity){
         return res.status(422).json({error:'Missing required field'});
     }
-    const id = crypto.randomUUID();
+    const id = Math.max(...products.map(product=> product.id)) + 1;
     products.push({id, name, price, quantity, active});
     res.status(201).json(req.body);
 })
@@ -54,6 +54,22 @@ app.get( '/products/:id', (req,res)=> {
     } else {
         res.status(200).json(product)
     }
+})
+
+app.put( "/products/:id", (req, res) => {
+    const product = products.find(item => item.id == req.params.id);
+    if (!product) {return res.status(404).json("Product with the given ID is not available.")}
+    const {name, price, quantity, active} = req.body;
+    if(name) product.name = name;
+    if(price) product.price = price;
+    if(typeof quantity !== 'undefined'){
+        if(Number.isInteger(parseInt(quantity)) && parseInt(quantity) >= 0)
+            product.quantity = parseInt(quantity);
+        else return res.status(400).json("Quantity must be a positive integer.");
+    }
+    if(active != null) product.active = active;
+    
+    res.status(200).json(product);
 })
 
 app.listen(PORT, () => {
